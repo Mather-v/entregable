@@ -6,6 +6,7 @@ const messagesEl = document.getElementById("messages");
 const userInput = document.getElementById("user-input");
 const sendBtn = document.getElementById("send-btn");
 const viewPdfBtn = document.getElementById("view-pdf-btn");
+const docSelect = document.getElementById("doc-select");
 const pdfViewer = document.getElementById("pdf-viewer");
 const pdfCanvas = document.getElementById("pdf-canvas");
 const pdfPageInfo = document.getElementById("pdf-page-info");
@@ -18,6 +19,7 @@ let documents = [];
 let chunks = [];
 let pdfDoc = null;
 let pdfPageNum = 1;
+let activeDoc = null;
 let sectionNames = [
   "objeto",
   "vigencia",
@@ -37,6 +39,23 @@ let sectionNames = [
   "garantías",
 ];
 
+const explainMap = {
+  vigencia: "Periodo durante el cual el documento o contrato está en efecto.",
+  jurisdiccion: "Ámbito o territorio donde se aplican las leyes y se resuelven disputas.",
+  "jurisdicción": "Ámbito o territorio donde se aplican las leyes y se resuelven disputas.",
+  confidencialidad: "Cláusulas que obligan a mantener la información privada y no divulgarla.",
+  terminacion: "Condiciones bajo las cuales el contrato puede finalizar antes de la vigencia.",
+  "terminación": "Condiciones bajo las cuales el contrato puede finalizar antes de la vigencia.",
+  penalidades: "Consecuencias económicas o acciones por incumplimiento de obligaciones.",
+  responsabilidad: "Deberes y riesgos asumidos por las partes.",
+  "ley aplicable": "Conjunto de normas que regula el contrato y su interpretación.",
+  "resolucion de controversias": "Mecanismos para resolver disputas, como mediación o arbitraje.",
+  "resolución de controversias": "Mecanismos para resolver disputas, como mediación o arbitraje.",
+  obligaciones: "Compromisos específicos que cada parte debe cumplir.",
+  garantias: "Aseguramientos de calidad, funcionamiento o cumplimiento sobre bienes o servicios.",
+  "garantías": "Aseguramientos de calidad, funcionamiento o cumplimiento sobre bienes o servicios.",
+};
+
 function addMessage(text, from) {
   const div = document.createElement("div");
   div.className = `msg ${from}`;
@@ -55,11 +74,13 @@ function normalize(s) {
 const tree = {
   root: {
     prompt:
-      "Asistente legal Kognia. Opciones: legal, formulario, documento, ayuda.",
+      "Asistente legal Kognia. Opciones: documento, legal, explicar, recomendar, ayuda.",
     routes: [
       { keywords: ["form", "formulario", "registro"], next: "form" },
       { keywords: ["doc", "documento", "subir"], next: "document" },
       { keywords: ["legal", "contrato", "estatuto", "acuerdo", "clausula", "cláusula"], next: "legal" },
+      { keywords: ["explicar", "explica", "que es", "qué es"], next: "explain" },
+      { keywords: ["recomendar", "recomendaciones", "recomienda"], next: "recommend" },
       { keywords: ["ayuda", "help"], next: "help" },
     ],
   },
@@ -86,6 +107,14 @@ const tree = {
       "Sube contratos, estatutos o acuerdos y pregunta por cláusulas (ej: cláusula 5), vigencia, jurisdicción, penalidades.",
     routes: [],
   },
+  explain: {
+    prompt: "Indica el término legal que deseas que explique (ej: vigencia, jurisdicción).",
+    routes: [],
+  },
+  recommend: {
+    prompt: "Puedo sugerir mejoras en el documento. Escribe 'recomendaciones' o 'analiza el documento'.",
+    routes: [],
+  },
   help: {
     prompt:
       "Puedo saludar, guiarte al formulario y responder preguntas simples del documento.",
@@ -103,9 +132,59 @@ function greetIfNeeded(text) {
     "buenas noches",
   ];
   if (greetings.some((g) => t.includes(g))) {
-    return "¡Hola!";
+    return "¡Hola! ¿En qué puedo ayudarte?";
   }
   return null;
+}
+
+function farewellIfNeeded(text) {
+  const t = normalize(text);
+  const farewells = ["adios", "adiós", "hasta luego", "nos vemos", "chao"];
+  if (farewells.some((g) => t.includes(g))) {
+    return "¡Hasta luego!";
+  }
+  return null;
+}
+
+function tryExplain(text) {
+  const t = normalize(text);
+  const keys = Object.keys(explainMap);
+  const ask = ["explica", "que es", "qué es", "que significa", "qué significa"];
+  const isAsk = ask.some((k) => t.includes(k));
+  for (const k of keys) {
+    const kn = normalize(k);
+    if ((isAsk && t.includes(kn)) || t === kn) {
+      return explainMap[k];
+    }
+  }
+  return null;
+}
+
+function analyzeDocumentSections() {
+  const present = new Set();
+  for (const ch of chunks) {
+    if (!ch.sectionTitle) continue;
+    const st = normalize(ch.sectionTitle);
+    for (const name of sectionNames) {
+      const nn = normalize(name);
+      if (st.includes(nn)) present.add(name);
+    }
+  }
+  return present;
+}
+
+function tryRecommend(text) {
+  const t = normalize(text);
+  const trigger = t.includes("recomend");
+  if (!trigger && state !== "recommend") return null;
+  if (!documents.length) return "Sube un documento para poder recomendar mejoras.";
+  const present = analyzeDocumentSections();
+  const missing = sectionNames.filter((n) => !present.has(n));
+  const base = missing.length
+    ? `Faltan secciones habituales: ${missing.join(", ")}.`
+    : "El documento contiene las secciones principales.";
+  const extra = "Revisa claridad de obligaciones, límites de responsabilidad y mecanismos de controversias.";
+  return `${base} ${extra}`;
 }
 
 function matchRoute(text) {
@@ -144,6 +223,15 @@ function tokenize(s) {
 function addDocument(name, type, text, pages) {
   documents.push({ name, type, text, pages });
   rebuildChunks();
+  if (docSelect) {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name;
+    docSelect.appendChild(opt);
+    if (!activeDoc) {
+      docSelect.value = "";
+    }
+  }
 }
 
 function rebuildChunks() {
@@ -213,7 +301,12 @@ function answerFromDocuments(query, k = 3) {
   if (target) {
     pool = chunks.filter((ch) => matchChunkTarget(ch, target));
   }
-  const ranked = rankChunksOver(pool, query).slice(0, k);
+  // apply activeDoc filter if set
+  if (activeDoc) {
+    pool = pool.filter((ch) => ch.doc === activeDoc);
+  }
+  const topK = k;
+  const ranked = rankChunksOver(pool, query).slice(0, topK);
   if (!ranked.length || ranked[0].score === 0) return "No encuentro esa información en los documentos.";
   const lines = ranked.map(({ chunk }) => {
     const cite = chunk.ref ? `${chunk.doc}, ${chunk.ref}` : chunk.doc;
@@ -326,12 +419,30 @@ function botRespond(text) {
   const greet = greetIfNeeded(text);
   if (greet) addMessage(greet, "bot");
 
+  const bye = farewellIfNeeded(text);
+  if (bye) {
+    addMessage(bye, "bot");
+    return;
+  }
+
   const next = matchRoute(text);
   if (next) state = next;
 
   const validation = tryValidate(text);
   if (validation) {
     addMessage(validation, "bot");
+    return;
+  }
+
+  const explained = tryExplain(text);
+  if (explained) {
+    addMessage(explained, "bot");
+    return;
+  }
+
+  const recs = tryRecommend(text);
+  if (recs) {
+    addMessage(recs, "bot");
     return;
   }
 
@@ -467,6 +578,13 @@ if (viewPdfBtn) {
       updatePdfControls();
       await renderPdfPage(pdfPageNum);
     }
+  });
+}
+
+if (docSelect) {
+  docSelect.addEventListener("change", () => {
+    const v = docSelect.value;
+    activeDoc = v || null;
   });
 }
 
