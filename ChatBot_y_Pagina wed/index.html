@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Esquema Web con Chat Bot</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+<script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</head>
+<body>
+<header class="site-header">
+<h1>Mi Página con Tres Columnas y Chat Bot</h1>
+</header>
+<main class="container">
+<section class="grid">
+<article class="card">
+<h2>Formulario de Contacto</h2>
+<form id="contact-form" novalidate>
+<div class="field">
+<label for="nombre">Nombre completo</label>
+<input id="nombre" name="nombre" type="text" required placeholder="Tu nombre">
+</div>
+<div class="field">
+<label for="correo">Correo electrónico</label>
+<input id="correo" name="correo" type="email" required placeholder="tucorreo@ejemplo.com">
+</div>
+<div class="field">
+<label for="celular">Número de celular</label>
+<input id="celular" name="celular" type="tel" required inputmode="tel" pattern="[0-9+()\-\s]{7,}" placeholder="+34 600 123 456">
+</div>
+<button type="submit" class="btn">Enviar</button>
+<p id="form-status" class="status"></p>
+</form>
+</article>
+<article class="card">
+<h2>Chat Bot</h2>
+<div class="bot-header">
+<div class="bot-icon" aria-hidden="true">🤖</div>
+<div class="bot-actions">
+<label class="upload-label">
+<input type="file" id="document-input" accept=".pdf,.doc,.docx,.txt" hidden>
+<span class="btn secondary">Subir documento</span>
+</label>
+<button id="export-word" class="btn secondary">Exportar a Word</button>
+<span id="document-name" class="file-name"></span>
+</div>
+</div>
+<div id="chat" class="chat">
+<ul id="messages" class="messages"></ul>
+<div class="chat-input">
+<input id="message-input" type="text" placeholder="Escribe un mensaje">
+<button id="send-button" class="btn">Enviar</button>
+</div>
+</div>
+</article>
+<article class="card">
+<h2>Información</h2>
+<p>Esta card es un espacio para contenido adicional, instrucciones o anuncios.</p>
+<ul class="info-list">
+<li>Diseño de tres columnas responsive.</li>
+<li>Formulario con validación básica.</li>
+<li>Chat Bot con carga de documentos.</li>
+</ul>
+</article>
+</section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
