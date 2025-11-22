@@ -1,9 +1,20 @@
 :root {
-  --bg: #0b0f1a;
-  --card: #121826;
+  --font-primary: "Bebas Neue","Montserrat",sans-serif;
+  --font-secondary: "Montserrat",sans-serif;
+  --default-font-family: Montserrat, sans-serif;
+  --kognia-cyan: #00FFFF;
+  --kognia-pink: #FF39EF;
+  --color-primary: #0A84FF;
+  --color-accent: #FF39EF;
+  --color-dark-blue: #15263A;
+  --color-dark-bg: #1367e4;
+  --color-bg: #f1f1f1;
+
+  --bg: var(--color-bg);
+  --card: var(--color-dark-blue);
   --text: #e6edf3;
   --muted: #94a3b8;
-  --primary: #4f46e5;
+  --primary: var(--color-primary);
   --primary-contrast: #ffffff;
   --success: #16a34a;
   --error: #dc2626;
@@ -16,8 +27,8 @@ html, body { height: 100%; }
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-  background: linear-gradient(180deg, #0a0e19 0%, #0b0f1a 100%);
+  font-family: var(--default-font-family);
+  background: linear-gradient(180deg, var(--color-bg) 0%, var(--color-dark-bg) 100%);
   color: var(--text);
 }
 
@@ -29,6 +40,7 @@ body {
 .site-header h1 {
   margin: 0;
   font-size: 28px;
+  font-family: var(--font-primary);
 }
 
 .container {
@@ -61,6 +73,8 @@ body {
 
 .card h2 { margin-top: 0; font-size: 20px; }
 
+.card h2 { color: var(--kognia-cyan); font-family: var(--font-secondary); }
+
 .field { margin-bottom: 12px; }
 
 .field label { display: block; margin-bottom: 6px; color: var(--muted); font-size: 14px; }
@@ -70,7 +84,7 @@ body {
   padding: 10px 12px;
   border-radius: 8px;
   border: 1px solid var(--border);
-  background: #0d1220;
+  background: #0443ee;
   color: var(--text);
 }
 
@@ -85,19 +99,25 @@ body {
   background: var(--primary);
   color: var(--primary-contrast);
   cursor: pointer;
+  transition: background .2s ease, box-shadow .2s ease, transform .1s ease;
 }
+
+.btn:hover { background: var(--color-accent); box-shadow: 0 6px 18px rgba(255,57,239,0.25); transform: translateY(-1px); }
+.btn:focus-visible { outline: 2px solid var(--kognia-cyan); outline-offset: 2px; }
 
 .btn.secondary {
   background: transparent;
   border: 1px solid var(--border);
 }
 
+.btn.secondary:hover { background: rgba(255,57,239,0.15); border-color: var(--color-accent); }
+
 .status { font-size: 14px; margin-top: 10px; }
 .status.success { color: var(--success); }
 .status.error { color: var(--error); }
 
 .bot-header { display: flex; align-items: center; gap: 12px; }
-.bot-icon { font-size: 28px; }
+.bot-icon { font-size: 28px; color: var(--color-accent); }
 .bot-actions { display: flex; align-items: center; gap: 10px; }
 .file-name { font-size: 12px; color: var(--muted); }
 
@@ -110,12 +130,12 @@ body {
   overflow: auto;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: #0d1220;
+  background: #0d49ee;
 }
 
 .messages li { margin: 6px; padding: 8px 10px; border-radius: 8px; max-width: 75%; }
-.messages li.user { background: rgba(79, 70, 229, 0.18); align-self: flex-end; margin-left: auto; }
-.messages li.bot { background: rgba(34, 197, 94, 0.18); }
+.messages li.user { background: rgba(10, 132, 255, 0.15); align-self: flex-end; margin-left: auto; border-left: 3px solid var(--color-primary); }
+.messages li.bot { background: rgba(0, 255, 255, 0.12); border-left: 3px solid var(--kognia-cyan); }
 .messages li.system { background: rgba(148, 163, 184, 0.18); text-align: center; margin-left: auto; margin-right: auto; }
 
 .chat-input { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
@@ -126,3 +146,31 @@ body {
   background: #0d1220;
   color: var(--text);
 }
+
+.chat-input input:focus { border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(255,57,239,0.25); outline: none; }
+:root {
+  --font-primary: "Bebas Neue", "Montserrat", sans-serif;
+  --font-secondary: "Montserrat", sans-serif;
+  --default-font-family: Montserrat, sans-serif;
+  --kognia-cyan: #293fb9;
+  --kognia-pink: #FF39EF;
+  --color-primary: #0A84FF;
+  --color-accent: #FF39EF;
+  --color-dark-blue: #15263A;
+  --color-dark-bg: #111C2D;
+  --color-bg: #000010;
+}
+
+body { font-family: var(--default-font-family); background: linear-gradient(180deg, var(--color-bg) 0%, var(--color-dark-bg) 100%); }
+.site-header h1 { font-family: var(--font-primary); letter-spacing: 0.5px; }
+.card { background: var(--color-dark-blue); }
+.btn { background: var(--color-primary); }
+.btn:hover { box-shadow: 0 0 0 2px rgba(0,255,255,0.25); }
+.btn.secondary { background: transparent; border: 1px solid var(--kognia-cyan); color: var(--kognia-cyan); }
+.btn.secondary:hover { border-color: var(--color-accent); color: var(--color-accent); }
+.field input, .messages, .chat-input input { background: var(--color-dark-bg); }
+.messages li.user { background: rgba(255, 57, 239, 0.18); }
+.messages li.bot { background: rgba(0, 255, 255, 0.18); }
+a { color: var(--color-accent); text-decoration: none; }
+a:hover { color: var(--kognia-cyan); text-decoration: underline; }
+input:focus, button:focus { outline: 2px solid var(--kognia-cyan); outline-offset: 2px; }
